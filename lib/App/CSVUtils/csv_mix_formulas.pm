@@ -56,6 +56,21 @@ Keywords: compositions, mixture, combine
 
 _
     add_args => {
+        output_format => {
+            summary => 'A sprintf() template to format the weight',
+            schema => 'str*',
+        },
+        output_percent => {
+            summary => 'If enabled, will convert output weights to percent with the percent sign (e.g. 0.6 to "60%")',
+            schema => 'bool*',
+        },
+        output_percent_nosign => {
+            summary => 'If enabled, will convert output weights to percent without the percent sign (e.g. 0.6 to "60")',
+            schema => 'bool*',
+        },
+    },
+    add_args_rels => {
+        choose_one => ['output_percent', 'output_percent_nosign'],
     },
     tags => ['category:combining'],
 
@@ -91,7 +106,20 @@ _
         }
 
         for my $ingredient (sort { $mixed_formula->{$b} <=> $mixed_formula->{$a} } keys %$mixed_formula) {
-            $r->{code_print_row}->([$ingredient, $mixed_formula->{$ingredient}]);
+            my $weight = $mixed_formula->{$ingredient};
+          FORMAT: {
+                if ($r->{util_args}{output_percent}) {
+                    $weight = ($weight * 100) . "%";
+                    last FORMAT;
+                } elsif ($r->{util_args}{output_percent_nosign}) {
+                    $weight = ($weight * 100);
+                }
+                if ($r->{util_args}{output_format}) {
+                    $weight = sprintf($r->{util_args}{output_format}, $weight);
+                }
+            } # FORMAT
+
+            $r->{code_print_row}->([$ingredient, $weight]);
         }
     },
 );
