@@ -19,12 +19,15 @@ gen_csv_util(
     name => 'csv_mix_formulas',
     summary => 'Mix several formulas/recipes (lists of ingredients and their weights/volumes) into one, '.
         'and output the combined formula',
-    description => <<'_',
+    description => <<'MARKDOWN',
 
-Each formula is a CSV comprised of at least two fields. The first field is
-assumed to contain the name of ingredients. The second field is assumed to
-contain the weight of ingredients. A percent form is recognized and will be
-converted to its decimal form (e.g. "60%" or "60.0 %" will become 0.6).
+Each formula is a CSV comprised of at least two fields. The first field (by
+default literally the first field, but can also be specified using
+`--ingredient-field`) is assumed to contain the name of ingredients. The second
+field (by default literally the second field, but can also be specified using
+`--weight-field`) is assumed to contain the weight of ingredients. A percent
+form is recognized and will be converted to its decimal form (e.g. "60%" or
+"60.0 %" will become 0.6).
 
 Example, mixing this CSV:
 
@@ -56,26 +59,35 @@ for sorting order: decreasing weight then by name.
 
 Keywords: compositions, mixture, combine
 
-_
+MARKDOWN
     add_args => {
+        ingredient_field => {
+            summary => 'Specify field which contain the ingredient names',
+            schema => 'str*',
+        },
+        weight_field => {
+            summary => 'Specify field which contain the weights',
+            schema => 'str*',
+        },
         output_format => {
             summary => 'A sprintf() template to format the weight',
             schema => 'str*',
-            tags => ['formatting'],
+            tags => ['category:formatting'],
         },
         output_percent => {
             summary => 'If enabled, will convert output weights to percent with the percent sign (e.g. 0.6 to "60%")',
             schema => 'bool*',
-            tags => ['formatting'],
+            tags => ['category:formatting'],
         },
         output_percent_nosign => {
             summary => 'If enabled, will convert output weights to percent without the percent sign (e.g. 0.6 to "60")',
             schema => 'bool*',
-            tags => ['formatting'],
+            tags => ['category:formatting'],
         },
     },
     add_args_rels => {
         choose_one => ['output_percent', 'output_percent_nosign'],
+        choose_all => ['ingredient_field', 'weight_field'],
     },
     tags => ['category:combining'],
 
@@ -98,10 +110,21 @@ _
 
         # TODO: allow to customize
         if ($r->{input_filenum} == 1) {
-            die "csv-mix-formulas: At least 2 fields are required\n" unless @{ $r->{input_fields} } >= 2;
+            # assign the ingredient field and weight field
+            if (defined $r->{util_args}{ingredient_field}) {
+                die "csv-mix-formulas: FATAL: Specified ingredient field does not exist\n"
+                    unless defined $r->{input_fields_idx}{ $r->{util_args}{ingredient_field} };
+                $r->{ingredient_field} = $r->{util_args}{ingredient_field};
 
-            $r->{ingredient_field} = $r->{input_fields}[0];
-            $r->{weight_field}     = $r->{input_fields}[1];
+                die "csv-mix-formulas: FATAL: Specified weight field does not exist\n"
+                    unless defined $r->{input_fields_idx}{ $r->{util_args}{weight_field} };
+                $r->{weight_field} = $r->{util_args}{weight_field};
+            } else {
+                die "csv-mix-formulas: FATAL: At least 2 fields are required\n" unless @{ $r->{input_fields} } >= 2;
+
+                $r->{ingredient_field} = $r->{input_fields}[0];
+                $r->{weight_field}     = $r->{input_fields}[1];
+            }
         }
 
         # after we read the header row of each input file, we record the fields
