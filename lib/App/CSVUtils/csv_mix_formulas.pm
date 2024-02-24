@@ -43,7 +43,7 @@ and this (notice the different headers, which will be ignored):
     water,80
 
 will result in (the header by default will follow the first CSV and ingredients
-will be sorted by decreasing weight):
+will be sorted by decreasing weight then by name):
 
     ingredient,%weight
     water,80
@@ -59,14 +59,17 @@ _
         output_format => {
             summary => 'A sprintf() template to format the weight',
             schema => 'str*',
+            tags => ['formatting'],
         },
         output_percent => {
             summary => 'If enabled, will convert output weights to percent with the percent sign (e.g. 0.6 to "60%")',
             schema => 'bool*',
+            tags => ['formatting'],
         },
         output_percent_nosign => {
             summary => 'If enabled, will convert output weights to percent without the percent sign (e.g. 0.6 to "60")',
             schema => 'bool*',
+            tags => ['formatting'],
         },
     },
     add_args_rels => {
@@ -105,7 +108,7 @@ _
             $mixed_formula->{$ingredient} = sum( @{ $r->{ingredients}{$ingredient} } ) / $num_formulas;
         }
 
-        for my $ingredient (sort { $mixed_formula->{$b} <=> $mixed_formula->{$a} } keys %$mixed_formula) {
+        for my $ingredient (sort { ($mixed_formula->{$b} <=> $mixed_formula->{$a}) || (lc($a) cmp lc($b)) } keys %$mixed_formula) {
             my $weight = $mixed_formula->{$ingredient};
           FORMAT: {
                 if ($r->{util_args}{output_percent}) {
