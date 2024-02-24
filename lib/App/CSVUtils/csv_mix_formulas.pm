@@ -16,7 +16,7 @@ use App::CSVUtils qw(
 use List::Util qw(sum);
 
 gen_csv_util(
-    name => 'csv_concat',
+    name => 'csv_mix_formulas',
     summary => 'Mix several formulas/recipes (lists of ingredients and their weights/volumes) into one, '.
         'and output the combined formula',
     description => <<'_',
@@ -71,8 +71,8 @@ _
             $r->{output_fields_idx} = $r->{input_fields_idx};
         }
 
-        my $ingredient = $r->{input_fields}[0];
-        my $weight = $r->{input_fields}[1];
+        my $ingredient = $r->{input_row}[0];
+        my $weight = $r->{input_row}[1];
         if ($weight =~ /\A(.+?)\s*%\z/) { $weight = $1 * 0.01 }
         $r->{ingredients}{ $ingredient } //= [];
         push @{ $r->{ingredients}{ $ingredient } }, $weight;
