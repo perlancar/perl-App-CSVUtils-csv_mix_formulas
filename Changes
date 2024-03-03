@@ -1,4 +1,4 @@
-0.002   2024-02-24  Released-By: PERLANCAR; Urgency: medium
+0.002   2024-02-24  Released-By: PERLANCAR; Urgency: medium; Backward-Incompatible: yes
 
         - [incompatible change] Ingredient and weight fields now must match
           between CSV files.
